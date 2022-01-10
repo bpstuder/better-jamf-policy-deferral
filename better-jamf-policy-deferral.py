@@ -38,6 +38,7 @@ from SystemConfiguration import SCDynamicStoreCopyConsoleUser
 DEFAULT_LD_LABEL = "com.contoso.deferred-policy"
 # Trigger: What custom trigger should be called to actually kick off the policy?
 DEFAULT_LD_JAMF_TRIGGER = "trigger_for_deferred_policy"
+DEFAULT_SOFTWARE_NAME = "Software"
 
 # If any app listed here is running on the client, no GUI prompts will be shown
 # and this program will exit silently with a non-zero exit code.
@@ -51,15 +52,16 @@ JAMFHELPER = ("/Library/Application Support/JAMF/bin/jamfHelper.app/Contents"
 
 # Prompt GUI Config
 GUI_WINDOW_TITLE = "IT Notification"
-GUI_HEADING = "Software Updates are ready to be installed."
+# 
 GUI_ICON = ("/System/Library/CoreServices/CoreTypes.bundle/Contents/Resources"
             "/AlertCautionIcon.icns")
-GUI_MESSAGE = """Software updates are available for your Mac.
 
-NOTE: Some required updates will require rebooting your computer once installed.
+# GUI_MESSAGE = """Software updates are available for your Mac.
 
-You may schedule these updates for a convenient time by choosing when to start installation.
-"""
+# NOTE: Some required updates will require rebooting your computer once installed.
+
+# You may schedule these updates for a convenient time by choosing when to start installation.
+# """
 # The order here is important as it affects the display of deferment options in
 # the GUI prompt. We set 300 (i.e. a five minute delay) as the first and
 # therefore default option.
@@ -121,6 +123,8 @@ def build_argparser():
                         default=DEFAULT_LD_LABEL, nargs="?")
     parser.add_argument("jamf_trigger",
                         default=DEFAULT_LD_JAMF_TRIGGER, nargs="?")
+    parser.add_argument("software_name",
+                        default=DEFAULT_SOFTWARE_NAME, nargs="?")
     return parser.parse_known_args()[0]
 
 
@@ -146,7 +150,7 @@ def calculate_deferment(add_seconds):
             str(future.strftime("%B %-d at %-I:%M %p")))
 
 
-def display_prompt():
+def display_prompt(software_name):
     """Displays prompt to allow user to schedule update installation
 
     Args:
@@ -157,6 +161,15 @@ def display_prompt():
         OR
         None if an error occurs
     """
+
+    GUI_HEADING = "{0} Updates are ready to be installed.".format(software_name)
+    GUI_MESSAGE = """{0} updates are available for your Mac.
+
+NOTE: Some required updates will require rebooting your computer once installed.
+
+You may schedule these updates for a convenient time by choosing when to start installation.
+""".format(software_name)
+
     cmd = [JAMFHELPER,
            '-windowType', 'utility',
            '-title', GUI_WINDOW_TITLE,
@@ -312,6 +325,14 @@ def main():
     ld_path = os.path.join('/Library/LaunchDaemons',
                            '{}.plist'.format(ld_label))
 
+    print("args:{0}".format(args.software_name))
+    if args.software_name == "":
+        # Use the default value from the head of the script
+        ld_software = DEFAULT_SOFTWARE_NAME
+    else:
+        # Use whatever was passed
+        ld_software = args.software_name
+
     if args.mode == 'prompt':
         # Ensure a user is logged in
         consoleuser = SCDynamicStoreCopyConsoleUser(None, None, None)[0]
@@ -330,7 +351,7 @@ def main():
             sys.exit(1)
 
         # Prompt the user to select a deferment
-        secs = display_prompt()
+        secs = display_prompt(ld_software)
         if secs is None:
             # Encountered an error, bail
             display_error()
