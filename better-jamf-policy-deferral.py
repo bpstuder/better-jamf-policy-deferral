@@ -54,7 +54,7 @@ JAMFHELPER = ("/Library/Application Support/JAMF/bin/jamfHelper.app/Contents"
 GUI_WINDOW_TITLE = "IT Notification"
 # 
 GUI_ICON = ("/System/Library/CoreServices/CoreTypes.bundle/Contents/Resources"
-            "/AlertCautionIcon.icns")
+            "/AlertNoteIcon.icns")
 
 # GUI_MESSAGE = """Software updates are available for your Mac.
 
@@ -71,7 +71,7 @@ GUI_BUTTON = "Okay"
 # Confirmation dialog Config
 GUI_S_HEADING = "Update scheduled"
 GUI_S_ICON = ("/System/Library/CoreServices/CoreTypes.bundle/Contents/Resources"
-              "/AlertCautionIcon.icns")
+              "/Clock.icns")
 GUI_S_BUTTON = "OK"
 # This string should contain '{date}' somewhere so that it may be replaced by
 # the specific datetime for which installation is scheduled
