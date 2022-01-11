@@ -44,6 +44,7 @@ DEFAULT_SOFTWARE_NAME = "Software"
 # and this program will exit silently with a non-zero exit code.
 # Examples included are to prevent interrupting presentations.
 BLOCKING_APPS = ['Keynote', 'Microsoft PowerPoint']
+# BLOCKING_APPS = ['Keynote', 'Microsoft PowerPoint', 'zoom.us']
 
 # Paths to binaries
 JAMF = "/usr/local/bin/jamf"
@@ -325,7 +326,6 @@ def main():
     ld_path = os.path.join('/Library/LaunchDaemons',
                            '{}.plist'.format(ld_label))
 
-    print("args:{0}".format(args.software_name))
     if args.software_name == "":
         # Use the default value from the head of the script
         ld_software = DEFAULT_SOFTWARE_NAME
@@ -348,7 +348,7 @@ def main():
         # Check for blocking apps
         if detect_blocking_apps():
             print "One or more blocking apps are running."
-            sys.exit(1)
+            sys.exit(2)
 
         # Prompt the user to select a deferment
         secs = display_prompt(ld_software)
