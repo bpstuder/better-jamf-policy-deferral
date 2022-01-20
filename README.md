@@ -133,6 +133,8 @@ creating a LaunchDaemon to execute your desired actions at a later time. An
    Set the script to run "Before" other policy items, and configure the parameters
    to your needs. The default "Mode" is "prompt" but you can set it here for
    completeness.
+   Set a parameter 7 with a custom application name, so it will be easier for the users to know
+   what is updated.
 4. Set an appropriate scope. You should be using Smart Groups to determine the 
    scope of computers that must run your "execution policy" and that same Smart
    Group would be an appropriate scope here. For our example "Software Updates"
