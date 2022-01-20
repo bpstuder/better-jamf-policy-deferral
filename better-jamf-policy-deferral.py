@@ -14,6 +14,8 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# Forked on https://github.com/bpstuder/better-jamf-policy-deferral
 """
 Better Jamf Policy Deferral
     Allows much more flexibility in user policy deferrals.
@@ -39,6 +41,7 @@ DEFAULT_LD_LABEL = "com.contoso.deferred-policy"
 # Trigger: What custom trigger should be called to actually kick off the policy?
 DEFAULT_LD_JAMF_TRIGGER = "trigger_for_deferred_policy"
 DEFAULT_SOFTWARE_NAME = "Software"
+DEFAULT_UPDATE_TYPE = "minor"
 
 # If any app listed here is running on the client, no GUI prompts will be shown
 # and this program will exit silently with a non-zero exit code.
@@ -66,7 +69,7 @@ GUI_ICON = ("/System/Library/CoreServices/CoreTypes.bundle/Contents/Resources"
 # The order here is important as it affects the display of deferment options in
 # the GUI prompt. We set 300 (i.e. a five minute delay) as the first and
 # therefore default option.
-GUI_DEFER_OPTIONS = ["300", "0", "1800", "3600", "14400", "43200", "604800"]
+GUI_DEFER_OPTIONS = ["300", "0", "1800", "3600", "14400", "86400"]
 GUI_BUTTON = "Okay"
 
 # Confirmation dialog Config
@@ -126,6 +129,8 @@ def build_argparser():
                         default=DEFAULT_LD_JAMF_TRIGGER, nargs="?")
     parser.add_argument("software_name",
                         default=DEFAULT_SOFTWARE_NAME, nargs="?")
+    parser.add_argument("update_type",
+                        default=DEFAULT_UPDATE_TYPE, nargs="?")
     return parser.parse_known_args()[0]
 
 
@@ -151,7 +156,7 @@ def calculate_deferment(add_seconds):
             str(future.strftime("%B %-d at %-I:%M %p")))
 
 
-def display_prompt(software_name):
+def display_prompt(software_name, update_type):
     """Displays prompt to allow user to schedule update installation
 
     Args:
@@ -164,11 +169,23 @@ def display_prompt(software_name):
     """
 
     GUI_HEADING = "{0} Updates are ready to be installed.".format(software_name)
-    GUI_MESSAGE = """{0} updates are available for your Mac.
+
+    print(update_type)
+
+    if (update_type == "minor"):
+        GUI_MESSAGE = """{0} updates are available for your Mac.
 
 NOTE: Some required updates will require rebooting your computer once installed.
 
 You may schedule these updates for a convenient time by choosing when to start installation.
+""".format(software_name)
+    elif (update_type == "major"):
+        GUI_MESSAGE = """{0} updates are available for your Mac.
+
+NOTE: These updates will require rebooting your computer once installed and will take from 30 minutes to 1 hour.
+
+You may schedule these updates for a convenient time by choosing when to start installation.
+
 """.format(software_name)
 
     cmd = [JAMFHELPER,
@@ -333,6 +350,13 @@ def main():
         # Use whatever was passed
         ld_software = args.software_name
 
+    if args.update_type == "":
+        # Use the default value from the head of the script
+        ld_update = DEFAULT_UPDATE_TYPE
+    else:
+        # Use whatever was passed
+        ld_update = args.update_type
+
     if args.mode == 'prompt':
         # Ensure a user is logged in
         consoleuser = SCDynamicStoreCopyConsoleUser(None, None, None)[0]
@@ -351,7 +375,7 @@ def main():
             sys.exit(2)
 
         # Prompt the user to select a deferment
-        secs = display_prompt(ld_software)
+        secs = display_prompt(ld_software, ld_update)
         if secs is None:
             # Encountered an error, bail
             display_error()
